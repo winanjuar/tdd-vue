@@ -2,59 +2,70 @@
   <h1>Sign Up</h1>
   <div>
     <label for="username">Username</label>
-    <input id="username" />
+    <input id="username" v-model="username" />
   </div>
   <div>
     <label for="email">E-mail</label>
-    <input id="email" />
+    <input id="email" v-model="email" />
   </div>
   <div>
     <label for="password">Password</label>
-    <input id="password" type="password" @input="onChangePassword" />
+    <input id="password" type="password" v-model="password" />
   </div>
   <div>
     <label for="passwordRepeat">Password Repeat</label>
-    <input id="passwordRepeat" type="password" @input="onChangePasswordRepeat" />
+    <input id="passwordRepeat" type="password" v-model="passwordRepeat" />
   </div>
-  <button :disabled="disabled">Sign Up</button>
+  <button :disabled="isDisabled" @click="submit">Sign Up</button>
 </template>
 
 <!-- composition API -->
 <!-- <script setup>
-import { ref } from 'vue'
-const disabled = ref(true)
+import axios from 'axios';
+import { computed, ref } from 'vue'
+const username=ref('')
+const email=ref('')
 const password = ref('')
 const passwordRepeat = ref('')
 
-const onChangePassword = (event) => {
-  password.value = event.target.value
-  disabled.value = password.value !== passwordRepeat.value
+const submit = () => {
+  axios.post('/api/v1/users', {
+    username: username.value,
+    email: email.value,
+    password: password.value
+  })
 }
 
-const onChangePasswordRepeat = (event) => {
-  passwordRepeat.value = event.target.value
-  disabled.value = password.value !== passwordRepeat.value
-}
+const isDisabled = computed(() => {
+  return password.value || passwordRepeat.value ? password.value !== passwordRepeat.value : true
+})
 </script> -->
 
 <!-- options api -->
 <script>
+import axios from 'axios'
+
 export default {
   data() {
     return {
-      disabled: true,
+      username: '',
+      email: '',
       password: '',
       passwordRepeat: ''
     }
   },
   methods: {
-    onChangePassword(event) {
-      this.password = event.target.value
-      this.disabled = this.password !== this.passwordRepeat
-    },
-    onChangePasswordRepeat(event) {
-      this.passwordRepeat = event.target.value
-      this.disabled = this.password !== this.passwordRepeat
+    submit() {
+      axios.post('/api/v1/users', {
+        username: this.username,
+        email: this.email,
+        password: this.password
+      })
+    }
+  },
+  computed: {
+    isDisabled() {
+      return this.password || this.passwordRepeat ? this.password !== this.passwordRepeat : true
     }
   }
 }
