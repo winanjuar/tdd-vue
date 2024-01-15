@@ -1,8 +1,12 @@
-vi.mock('axios')
 import userEvent from '@testing-library/user-event'
 import SignUp from './SignUp.vue'
-import { render, screen } from '@testing-library/vue'
-import axios from 'axios'
+import { render, screen, waitFor } from '@testing-library/vue'
+// vi.mock('axios')
+// import axios from 'axios'
+// const mockFetch = vi.fn()
+// global.fetch = mockFetch
+import { setupServer } from 'msw/node'
+import { HttpResponse, http } from 'msw'
 
 describe('Sign Up', () => {
   it('has Sign Up header', () => {
@@ -66,6 +70,15 @@ describe('Sign Up', () => {
 
     describe('when user submits form', () => {
       it('send username, email, password to the backend', async () => {
+        let requestBody
+        const server = setupServer(
+          http.post('/api/v1/users', async ({ request }) => {
+            requestBody = await request.json()
+            return HttpResponse.json({})
+          })
+        )
+        server.listen()
+
         const user = userEvent.setup()
         render(SignUp)
         const usernameInput = screen.getByLabelText('Username')
@@ -78,11 +91,31 @@ describe('Sign Up', () => {
         await user.type(passwordRepeatInput, 'P4ssw0rd01')
         const button = screen.getByRole('button', { name: 'Sign Up' })
         await user.click(button)
-        expect(axios.post).toHaveBeenCalledWith('/api/v1/users', {
-          username: 'user1',
-          email: 'user1@gmail.com',
-          password: 'P4ssw0rd01'
+        await waitFor(() => {
+          expect(requestBody).toEqual({
+            username: 'user1',
+            email: 'user1@gmail.com',
+            password: 'P4ssw0rd01'
+          })
         })
+
+        // using axios
+        // expect(axios.post).toHaveBeenCalledWith('/api/v1/users', {
+        //   username: 'user1',
+        //   email: 'user1@gmail.com',
+        //   password: 'P4ssw0rd01'
+        // })
+
+        // using fetch
+        // expect(mockFetch).toHaveBeenCalledWith('/api/v1/users', {
+        //   method: 'POST',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   body: JSON.stringify({
+        //     username: 'user1',
+        //     email: 'user1@gmail.com',
+        //     password: 'P4ssw0rd01'
+        //   })
+        // })
       })
     })
   })
